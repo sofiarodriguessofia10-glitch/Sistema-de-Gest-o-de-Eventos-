@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventFlow | Sistema de Gestão</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #8A84FF;
+            --primary-dark: #554FD8;
+            --secondary: #FF6584;
+            --accent: #36D1DC;
+            --light: #F8FAFC;
+            --dark: #1E293B;
+            --gray: #64748B;
+            --gray-light: #E2E8F0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border-radius: 16px;
+            --border-radius-sm: 8px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Tela de Login */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 2rem;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+
+        .login-logo {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+
+        .login-subtitle {
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 1rem;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            color: var(--danger);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Header do Dashboard */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            font-size: 1.75rem;
+        }
+
+        .search-container {
+            position: relative;
+            width: 320px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 48px;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+        }
+
+        .user-role {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .stat-icon.events {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+
+        .stat-icon.participants {
+            background: linear-gradient(135deg, var(--secondary) 0%, #FF8FA3 100%);
+        }
+
+        .stat-icon.availability {
+            background: linear-gradient(135deg, var(--accent) 0%, #5B86E5 100%);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.75rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #E04F6D;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #DC2626;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius-sm);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.1);
+        }
+
+        /* Lista de Eventos */
+        .event-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.75rem;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .event-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .event-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .event-body {
+            padding: 1.5rem;
+        }
+
+        .event-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            color: var(--gray);
+        }
+
+        .event-info i {
+            margin-right: 0.75rem;
+            width: 20px;
+            color: var(--primary);
+        }
+
+        .event-footer {
+            padding: 1.25rem 1.5rem;
+            background-color: #F8FAFC;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        /* Lista de Participantes */
+        .participants-list {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .participant-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--gray-light);
+            transition: var(--transition);
+        }
+
+        .participant-item:hover {
+            background-color: #F8FAFC;
+        }
+
+        .participant-item:last-child {
+            border-bottom: none;
+        }
+
+        .participant-info h4 {
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .participant-info p {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-primary {
+            background-color: rgba(108, 99, 255, 0.1);
+            color: var(--primary);
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        /* Estados Vazios */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--gray-light);
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Notificação */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 1.25rem 1.5rem;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            max-width: 380px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .notification i {
+            font-size: 1.5rem;
+        }
+
+        .notification.success i {
+            color: var(--success);
+        }
+
+        .notification.error i {
+            color: var(--danger);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .search-container {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .user-menu {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .event-list {
+                grid-template-columns: 1fr;
+            }
+
+            .login-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="login-screen" class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-calendar-star"></i>
+            </div>
+            <h1 class="login-title">EventFlow</h1>
+            <p class="login-subtitle">Sistema de Gestão de Eventos</p>
+            
+            <form class="login-form" id="login-form">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" required value="sofia.goncalvescr@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" required value="eventos123!">
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Entrar no Sistema
+                </button>
+                <div class="login-error" id="login-error">
+                    Credenciais inválidas. Tente novamente.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard (após login) -->
+    <div id="dashboard" class="hidden">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-calendar-star"></i>
+                        <span>EventFlow</span>
+                    </div>
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" id="search-input" placeholder="Buscar eventos, participantes...">
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-info">
+                            <div class="user-name" id="user-name">Sofia Gonçalves</div>
+                            <div class="user-role">Gerente de Eventos</div>
+                        </div>
+                        <button class="logout-btn" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-icon events">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-number" id="total-events">0</div>
+                    <div class="stat-label">Eventos Ativos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon participants">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number" id="total-participants">0</div>
+                    <div class="stat-label">Participantes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon availability">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <div class="stat-number" id="availability-rate">0%</div>
+                    <div class="stat-label">Taxa de Ocupação</div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="sidebar">
+                    <!-- Formulário de Evento -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-plus-circle"></i>
+                                <span id="event-form-title">Novo Evento</span>
+                            </h2>
+                        </div>
+                        <form id="event-form">
+                            <input type="hidden" id="event-id">
+                            <div class="form-group">
+                                <label for="event-name">Nome do Evento</label>
+                                <input type="text" id="event-name" placeholder="Ex: Conferência de Tecnologia" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-date">Data do Evento</label>
+                                <input type="date" id="event-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-location">Local</label>
+                                <input type="text" id="event-location" placeholder="Ex: Centro de Convenções" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="event-vacancies">Vagas Disponíveis</label>
+                                <input type="number" id="event-vacancies" min="1" placeholder="Ex: 100" required>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                                    <i class="fas fa-save"></i> <span id="event-submit-text">Criar Evento</span>
+                                </button>
+                                <button type="button" class="btn" style="width: 100%; margin-top: 0.5rem; display: none;" id="cancel-edit">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Formulário de Participante -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-user-plus"></i>
+                                <span id="participant-form-title">Novo Participante</span>
+                            </h2>
+                        </div>
+                        <form id="participant-form">
+                            <input type="hidden" id="participant-id">
+                            <div class="form-group">
+                                <label for="participant-name">Nome Completo</label>
+                                <input type="text" id="participant-name" placeholder="Ex: João Silva" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="participant-birthdate">Data de Nascimento</label>
+                                <input type="date" id="participant-birthdate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="participant-cpf">CPF</label>
+                                <input type="text" id="participant-cpf" placeholder="Ex: 123.456.789-00" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="participant-email">E-mail</label>
+                                <input type="email" id="participant-email" placeholder="Ex: joao@email.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="participant-phone">Telefone</label>
+                                <input type="text" id="participant-phone" placeholder="Ex: (11) 99999-9999" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="participant-event">Evento</label>
+                                <select id="participant-event" required>
+                                    <option value="">Selecione um evento</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="btn" style="width: 100%;">
+                                    <i class="fas fa-user-check"></i> <span id="participant-submit-text">Inscrever Participante</span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem; display: none;" id="cancel-participant-edit">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <!-- Lista de Eventos -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-calendar-week"></i>
+                                Eventos Cadastrados
+                            </h2>
+                            <button class="btn btn-small" id="refresh-events">
+                                <i class="fas fa-sync-alt"></i> Atualizar
+                            </button>
+                        </div>
+                        <div class="event-list" id="events-container">
+                            <!-- Eventos serão carregados aqui -->
+                        </div>
+                    </div>
+
+                    <!-- Lista de Participantes -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">
+                                <i class="fas fa-users"></i>
+                                Participantes Inscritos
+                            </h2>
+                            <button class="btn btn-small" id="refresh-participants">
+                                <i class="fas fa-sync-alt"></i> Atualizar
+                            </button>
+                        </div>
+                        <div class="participants-list" id="participants-container">
+                            <!-- Participantes serão carregados aqui -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div class="modal" id="confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Confirmar Exclusão</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            <p id="modal-message">Tem certeza que deseja excluir este item?</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-danger" id="confirm-delete">Excluir</button>
+                <button class="btn" id="cancel-delete">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificação -->
+    <div class="notification hidden" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <h4 id="notification-title">Sucesso!</h4>
+            <p id="notification-message">Operação realizada com sucesso.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuração do Supabase
+        const SUPABASE_URL = 'https://ajacxytbhlbmijesbzpz.supabase.co'; // Substitua pela sua URL
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYWN4eXRiaGxibWlqZXNienB6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4Mzg4MjUsImV4cCI6MjA3OTQxNDgyNX0.kUuQf3mCicIcgLUAEz7Z9e1_5mP5HVCc62QecBcT_tI'; // Substitua pela sua chave
+        
+        // Inicializar o cliente Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Elementos DOM
+        const loginScreen = document.getElementById('login-screen');
+        const dashboard = document.getElementById('dashboard');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userName = document.getElementById('user-name');
+        
+        // Variáveis globais
+        let currentEditingEvent = null;
+        let currentEditingParticipant = null;
+        let deleteCallback = null;
+
+        // Função de Login
+        async function handleLogin(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) throw error;
+                
+                // Verificar se é o usuário autorizado
+                if (data.user.email === 'sofia.goncalvescr@gmail.com') {
+                    showNotification('Sucesso', 'Login realizado com sucesso!');
+                    loginScreen.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    userName.textContent = 'Sofia Gonçalves';
+                    
+                    // Carregar dados
+                    loadEvents();
+                    loadParticipants();
+                } else {
+                    throw new Error('Acesso não autorizado');
+                }
+                
+            } catch (error) {
+                console.error('Erro no login:', error);
+                loginError.style.display = 'block';
+                setTimeout(() => {
+                    loginError.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Função de Logout
+        async function handleLogout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                dashboard.classList.add('hidden');
+                loginScreen.classList.remove('hidden');
+                loginForm.reset();
+                
+            } catch (error) {
+                console.error('Erro no logout:', error);
+            }
+        }
+
+        // Função para mostrar notificação
+        function showNotification(title, message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.className = `notification ${type}`;
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            const icon = notification.querySelector('i');
+            if (type === 'success') {
+                icon.className = 'fas fa-check-circle';
+            } else {
+                icon.className = 'fas fa-exclamation-circle';
+            }
+            
+            notification.classList.remove('hidden');
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.classList.add('hidden');
+                }, 500);
+            }, 4000);
+        }
+
+        // Função para carregar eventos
+        async function loadEvents() {
+            try {
+                const { data: eventos, error } = await supabase
+                    .from('eventos')
+                    .select('*')
+                    .order('data', { ascending: true });
+                
+                if (error) throw error;
+                
+                // Atualizar estatísticas
+                document.getElementById('total-events').textContent = eventos.length;
+                
+                // Limpar container de eventos
+                const eventsContainer = document.getElementById('events-container');
+                eventsContainer.innerHTML = '';
+                
+                // Limpar e preencher select de eventos
+                const eventSelect = document.getElementById('participant-event');
+                eventSelect.innerHTML = '<option value="">Selecione um evento</option>';
+                
+                // Calcular taxa de ocupação geral
+                let totalCapacity = 0;
+                let totalParticipants = 0;
+                
+                // Adicionar eventos ao container
+                if (eventos.length === 0) {
+                    eventsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-times"></i>
+                            <h3>Nenhum evento encontrado</h3>
+                            <p>Crie seu primeiro evento usando o formulário ao lado</p>
+                        </div>
+                    `;
+                } else {
+                    for (const evento of eventos) {
+                        // Calcular participantes para este evento
+                        const count = await countParticipantsForEvent(evento.id);
+                        totalCapacity += evento.vagas;
+                        totalParticipants += count;
+                        
+                        const eventCard = document.createElement('div');
+                        eventCard.className = 'event-card';
+                        eventCard.innerHTML = `
+                            <div class="event-header">
+                                <h3 class="event-title">${evento.nome}</h3>
+                                <div class="event-info">
+                                    <i class="far fa-calendar"></i>
+                                    <span>${new Date(evento.data).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                            </div>
+                            <div class="event-body">
+                                <div class="event-info">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>${evento.local}</span>
+                                </div>
+                                <div class="event-info">
+                                    <i class="fas fa-users"></i>
+                                    <span>${count} / ${evento.vagas} participantes</span>
+                                </div>
+                            </div>
+                            <div class="event-footer">
+                                <span class="badge ${count >= evento.vagas ? 'badge-warning' : 'badge-primary'}">
+                                    <i class="fas ${count >= evento.vagas ? 'fa-exclamation-triangle' : 'fa-check'}"></i>
+                                    ${count >= evento.vagas ? 'Lotado' : 'Disponível'}
+                                </span>
+                                <div class="actions">
+                                    <button class="btn btn-small" onclick="editEvent(${evento.id})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-small btn-danger" onclick="confirmDelete('event', ${evento.id}, '${evento.nome}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        eventsContainer.appendChild(eventCard);
+                    }
+                    
+                    // Calcular e atualizar taxa de ocupação geral
+                    const availabilityRate = totalCapacity > 0 ? Math.round((totalParticipants / totalCapacity) * 100) : 0;
+                    document.getElementById('availability-rate').textContent = `${availabilityRate}%`;
+                }
+                
+                // Adicionar opções ao select
+                eventos.forEach(evento => {
+                    const option = document.createElement('option');
+                    option.value = evento.id;
+                    option.textContent = evento.nome;
+                    eventSelect.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar eventos:', error);
+                showNotification('Erro', 'Não foi possível carregar os eventos', 'error');
+            }
+        }
+
+        // Função para contar participantes de um evento
+        async function countParticipantsForEvent(eventId) {
+            const { data, error } = await supabase
+                .from('participantes')
+                .select('id', { count: 'exact' })
+                .eq('evento_id', eventId);
+            
+            if (error) {
+                console.error('Erro ao contar participantes:', error);
+                return 0;
+            }
+            
+            return data.length;
+        }
+
+        // Função para carregar participantes
+        async function loadParticipants() {
+            try {
+                const { data: participantes, error } = await supabase
+                    .from('participantes')
+                    .select(`
+                        *,
+                        eventos (nome)
+                    `)
+                    .order('nome', { ascending: true });
+                
+                if (error) throw error;
+                
+                // Limpar container de participantes
+                const participantsContainer = document.getElementById('participants-container');
+                participantsContainer.innerHTML = '';
+                
+                // Atualizar estatísticas
+                document.getElementById('total-participants').textContent = participantes.length;
+                
+                // Adicionar participantes ao container
+                if (participantes.length === 0) {
+                    participantsContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-user-slash"></i>
+                            <h3>Nenhum participante encontrado</h3>
+                            <p>Inscreva seu primeiro participante usando o formulário ao lado</p>
+                        </div>
+                    `;
+                } else {
+                    participantes.forEach(participante => {
+                        const participantItem = document.createElement('div');
+                        participantItem.className = 'participant-item';
+                        participantItem.innerHTML = `
+                            <div class="participant-info">
+                                <h4>${participante.nome}</h4>
+                                <p>${participante.email} • ${participante.eventos.nome}</p>
+                            </div>
+                            <div class="actions">
+                                <button class="btn btn-small" onclick="editParticipant(${participante.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-small btn-danger" onclick="confirmDelete('participant', ${participante.id}, '${participante.nome}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                        participantsContainer.appendChild(participantItem);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar participantes:', error);
+                showNotification('Erro', 'Não foi possível carregar os participantes', 'error');
+            }
+        }
+
+        // Função para adicionar/editar evento
+        async function saveEvent(eventData, isEditing = false) {
+            try {
+                let result;
+                if (isEditing) {
+                    result = await supabase
+                        .from('eventos')
+                        .update(eventData)
+                        .eq('id', currentEditingEvent);
+                } else {
+                    // Gerar ID (em um sistema real, isso seria automático)
+                    const maxIdResult = await supabase
+                        .from('eventos')
+                        .select('id')
+                        .order('id', { ascending: false })
+                        .limit(1);
+                    
+                    let newId = 1;
+                    if (maxIdResult.data && maxIdResult.data.length > 0) {
+                        newId = maxIdResult.data[0].id + 1;
+                    }
+                    
+                    result = await supabase
+                        .from('eventos')
+                        .insert([{ ...eventData, id: newId }]);
+                }
+                
+                if (result.error) throw result.error;
+                
+                showNotification('Sucesso', `Evento ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
+                loadEvents();
+                resetEventForm();
+                
+            } catch (error) {
+                console.error('Erro ao salvar evento:', error);
+                showNotification('Erro', `Não foi possível ${isEditing ? 'atualizar' : 'criar'} o evento`, 'error');
+            }
+        }
+
+        // Função para adicionar/editar participante
+        async function saveParticipant(participantData, isEditing = false) {
+            try {
+                let result;
+                if (isEditing) {
+                    result = await supabase
+                        .from('participantes')
+                        .update(participantData)
+                        .eq('id', currentEditingParticipant);
+                } else {
+                    result = await supabase
+                        .from('participantes')
+                        .insert([participantData]);
+                }
+                
+                if (result.error) throw result.error;
+                
+                showNotification('Sucesso', `Participante ${isEditing ? 'atualizado' : 'inscrito'} com sucesso!`);
+                loadParticipants();
+                resetParticipantForm();
+                
+            } catch (error) {
+                console.error('Erro ao salvar participante:', error);
+                showNotification('Erro', `Não foi possível ${isEditing ? 'atualizar' : 'inscrever'} o participante`, 'error');
+            }
+        }
+
+        // Função para editar evento
+        async function editEvent(eventId) {
+            try {
+                const { data: evento, error } = await supabase
+                    .from('eventos')
+                    .select('*')
+                    .eq('id', eventId)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('event-id').value = evento.id;
+                document.getElementById('event-name').value = evento.nome;
+                document.getElementById('event-date').value = evento.data;
+                document.getElementById('event-location').value = evento.local;
+                document.getElementById('event-vacancies').value = evento.vagas;
+                
+                document.getElementById('event-form-title').textContent = 'Editar Evento';
+                document.getElementById('event-submit-text').textContent = 'Atualizar Evento';
+                document.getElementById('cancel-edit').style.display = 'block';
+                
+                currentEditingEvent = eventId;
+                
+            } catch (error) {
+                console.error('Erro ao carregar evento para edição:', error);
+                showNotification('Erro', 'Não foi possível carregar o evento para edição', 'error');
+            }
+        }
+
+        // Função para editar participante
+        async function editParticipant(participantId) {
+            try {
+                const { data: participante, error } = await supabase
+                    .from('participantes')
+                    .select('*')
+                    .eq('id', participantId)
+                    .single();
+                
+                if (error) throw error;
+                
+                document.getElementById('participant-id').value = participante.id;
+                document.getElementById('participant-name').value = participante.nome;
+                document.getElementById('participant-birthdate').value = participante.data_nascimento;
+                document.getElementById('participant-cpf').value = participante.cpf;
+                document.getElementById('participant-email').value = participante.email;
+                document.getElementById('participant-phone').value = participante.numero;
+                document.getElementById('participant-event').value = participante.evento_id;
+                
+                document.getElementById('participant-form-title').textContent = 'Editar Participante';
+                document.getElementById('participant-submit-text').textContent = 'Atualizar Participante';
+                document.getElementById('cancel-participant-edit').style.display = 'block';
+                
+                currentEditingParticipant = participantId;
+                
+            } catch (error) {
+                console.error('Erro ao carregar participante para edição:', error);
+                showNotification('Erro', 'Não foi possível carregar o participante para edição', 'error');
+            }
+        }
+
+        // Função para confirmar exclusão
+        function confirmDelete(type, id, name) {
+            const modal = document.getElementById('confirm-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            
+            modalTitle.textContent = `Confirmar Exclusão de ${type === 'event' ? 'Evento' : 'Participante'}`;
+            modalMessage.textContent = `Tem certeza que deseja excluir ${type === 'event' ? 'o evento' : 'o participante'} "${name}"?`;
+            
+            deleteCallback = () => deleteItem(type, id);
+            
+            modal.style.display = 'flex';
+        }
+
+        // Função para excluir item
+        async function deleteItem(type, id) {
+            try {
+                if (type === 'event') {
+                    // Primeiro excluir participantes associados
+                    await supabase
+                        .from('participantes')
+                        .delete()
+                        .eq('evento_id', id);
+                    
+                    // Depois excluir o evento
+                    const { error } = await supabase
+                        .from('eventos')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                    
+                    showNotification('Sucesso', 'Evento excluído com sucesso!');
+                    loadEvents();
+                    loadParticipants();
+                    
+                } else {
+                    const { error } = await supabase
+                        .from('participantes')
+                        .delete()
+                        .eq('id', id);
+                    
+                    if (error) throw error;
+                    
+                    showNotification('Sucesso', 'Participante excluído com sucesso!');
+                    loadParticipants();
+                }
+                
+                closeModal();
+                
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                showNotification('Erro', `Não foi possível excluir o ${type === 'event' ? 'evento' : 'participante'}`, 'error');
+                closeModal();
+            }
+        }
+
+        // Funções auxiliares
+        function resetEventForm() {
+            document.getElementById('event-form').reset();
+            document.getElementById('event-form-title').textContent = 'Novo Evento';
+            document.getElementById('event-submit-text').textContent = 'Criar Evento';
+            document.getElementById('cancel-edit').style.display = 'none';
+            currentEditingEvent = null;
+        }
+
+        function resetParticipantForm() {
+            document.getElementById('participant-form').reset();
+            document.getElementById('participant-form-title').textContent = 'Novo Participante';
+            document.getElementById('participant-submit-text').textContent = 'Inscrever Participante';
+            document.getElementById('cancel-participant-edit').style.display = 'none';
+            currentEditingParticipant = null;
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').style.display = 'none';
+            deleteCallback = null;
+        }
+
+        // Função de busca inteligente
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                // Filtrar eventos
+                const eventCards = document.querySelectorAll('.event-card');
+                eventCards.forEach(card => {
+                    const eventTitle = card.querySelector('.event-title').textContent.toLowerCase();
+                    const eventLocation = card.querySelector('.event-info:nth-child(2) span').textContent.toLowerCase();
+                    
+                    if (eventTitle.includes(searchTerm) || eventLocation.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Filtrar participantes
+                const participantItems = document.querySelectorAll('.participant-item');
+                participantItems.forEach(item => {
+                    const participantName = item.querySelector('h4').textContent.toLowerCase();
+                    const participantEmail = item.querySelector('p').textContent.toLowerCase();
+                    
+                    if (participantName.includes(searchTerm) || participantEmail.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // Event Listeners
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            handleLogin(email, password);
+        });
+
+        logoutBtn.addEventListener('click', handleLogout);
+
+        document.getElementById('event-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const eventData = {
+                nome: document.getElementById('event-name').value,
+                data: document.getElementById('event-date').value,
+                local: document.getElementById('event-location').value,
+                vagas: parseInt(document.getElementById('event-vacancies').value)
+            };
+            
+            saveEvent(eventData, currentEditingEvent !== null);
+        });
+
+        document.getElementById('participant-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const participantData = {
+                nome: document.getElementById('participant-name').value,
+                data_nascimento: document.getElementById('participant-birthdate').value,
+                cpf: document.getElementById('participant-cpf').value,
+                email: document.getElementById('participant-email').value,
+                numero: document.getElementById('participant-phone').value,
+                evento_id: parseInt(document.getElementById('participant-event').value)
+            };
+            
+            saveParticipant(participantData, currentEditingParticipant !== null);
+        });
+
+        document.getElementById('cancel-edit').addEventListener('click', resetEventForm);
+        document.getElementById('cancel-participant-edit').addEventListener('click', resetParticipantForm);
+        document.getElementById('refresh-events').addEventListener('click', loadEvents);
+        document.getElementById('refresh-participants').addEventListener('click', loadParticipants);
+        document.getElementById('close-modal').addEventListener('click', closeModal);
+        document.getElementById('cancel-delete').addEventListener('click', closeModal);
+        document.getElementById('confirm-delete').addEventListener('click', () => {
+            if (deleteCallback) deleteCallback();
+        });
+
+        // Verificar se o usuário já está logado ao carregar a página
+        async function checkAuth() {
+            const { data } = await supabase.auth.getSession();
+            if (data.session?.user?.email === 'sofia.goncalvescr@gmail.com') {
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                userName.textContent = 'Sofia Gonçalves';
+                loadEvents();
+                loadParticipants();
+                setupSearch();
+            }
+        }
+
+        // Inicializar aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
